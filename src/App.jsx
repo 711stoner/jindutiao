@@ -21,6 +21,7 @@ export default function App() {
     fontSize: 18,
     fontFamily: 'Arial',
     exportResolution: '1920x1080',
+    exportFormat: 'sequence',
   })
 
   return (

@@ -194,6 +194,23 @@ export default function ConfigPanel({ config, onChange, topics, onTopicsChange }
         <label>导出设置</label>
 
         <div style={{ marginBottom: '12px' }}>
+          <label style={{ fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block' }}>导出格式</label>
+          <select
+            value={config.exportFormat}
+            onChange={(e) => handleConfigChange('exportFormat', e.target.value)}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          >
+            <option value="sequence">📸 帧序列 (快速)</option>
+            <option value="webm">🎬 WebM 视频 (完整)</option>
+          </select>
+          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+            {config.exportFormat === 'sequence'
+              ? '导出所有帧为PNG，在剪辑软件中导入序列'
+              : '实时录制完整视频，需等待视频时长'}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '12px' }}>
           <label style={{ fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block' }}>分辨率</label>
           <select
             value={config.exportResolution}
@@ -204,12 +221,6 @@ export default function ConfigPanel({ config, onChange, topics, onTopicsChange }
             <option value="1280x720">1280×720 (标清)</option>
             <option value="960x540">960×540 (小)</option>
           </select>
-        </div>
-
-        <div style={{ fontSize: '11px', color: '#999', marginBottom: '12px' }}>
-          💡 导出为 WebM 格式。需要等待视频时长才能完成录制。
-          <br />
-          如需 MP4，可用 <a href="https://cloudconvert.com/webm-to-mp4" target="_blank" rel="noopener noreferrer" style={{ color: '#4ECDC4' }}>在线工具</a> 转换。
         </div>
 
         <button

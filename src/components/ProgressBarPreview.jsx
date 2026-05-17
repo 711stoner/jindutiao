@@ -8,6 +8,80 @@ export default function ProgressBarPreview({ config, topics, onExportGif }) {
   const [exportProgress, setExportProgress] = useState(0)
   const [exportStatus, setExportStatus] = useState('')
 
+  const generateFrameSequence = async () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const fps = 30
+        const totalFrames = Math.ceil(config.totalDuration * fps)
+        const frames = []
+
+        // 生成所有帧
+        for (let i = 0; i < totalFrames; i++) {
+          const time = i / fps
+          const canvas = canvasRef.current
+
+          // 获取当前帧的canvas图像数据
+          const imageData = canvas.toDataURL('image/png')
+          frames.push({ data: imageData, index: i })
+
+          // 更新进度
+          setExportProgress(i / totalFrames * 0.9)
+
+          // 让UI有机会更新
+          if (i % 10 === 0) {
+            await new Promise(r => setTimeout(r, 0))
+          }
+        }
+
+        // 下载帧序列
+        // 由于浏览器限制，分批下载而不是ZIP
+        setExportStatus('下载帧...')
+
+        // 创建一个包含所有帧数据的JSON
+        const frameListJSON = {
+          totalFrames,
+          fps,
+          resolution: config.exportResolution,
+          frames: frames.map(f => f.index)
+        }
+
+        // 下载帧列表
+        const listBlob = new Blob([JSON.stringify(frameListJSON, null, 2)], { type: 'application/json' })
+        const listUrl = URL.createObjectURL(listBlob)
+        const listLink = document.createElement('a')
+        listLink.href = listUrl
+        listLink.download = `progress-bar-frames-info.json`
+        document.body.appendChild(listLink)
+        listLink.click()
+        document.body.removeChild(listLink)
+
+        // 逐个下载每一帧
+        for (let i = 0; i < frames.length; i++) {
+          const frame = frames[i]
+          const link = document.createElement('a')
+          link.href = frame.data
+          link.download = `frame_${String(i).padStart(6, '0')}.png`
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+
+          setExportProgress(0.9 + (i / frames.length) * 0.1)
+
+          // 下载之间延迟避免浏览器卡顿
+          if (i % 5 === 0) {
+            await new Promise(r => setTimeout(r, 100))
+          }
+        }
+
+        setExportStatus('帧序列已导出！')
+        setExportProgress(1)
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
   const recordWebM = async () => {
     return new Promise((resolve, reject) => {
       const stream = canvasRef.current.captureStream(30)
@@ -47,23 +121,29 @@ export default function ProgressBarPreview({ config, topics, onExportGif }) {
 
     setIsExporting(true)
     setExportProgress(0)
-    setExportStatus('正在录制...')
 
     try {
-      const blob = await recordWebM()
+      if (config.exportFormat === 'sequence') {
+        setExportStatus('生成帧序列...')
+        await generateFrameSequence()
+      } else {
+        setExportStatus('正在录制...')
+        const blob = await recordWebM()
 
-      // 下载视频
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `progress-bar-${Date.now()}.webm`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+        // 下载视频
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `progress-bar-${Date.now()}.webm`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
 
-      setExportProgress(1)
-      setExportStatus('导出成功！')
+        setExportProgress(1)
+        setExportStatus('导出成功！')
+      }
+
       setTimeout(() => {
         setIsExporting(false)
         setExportProgress(0)
