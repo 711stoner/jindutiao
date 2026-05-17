@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { generateVideoWithFFmpeg } from '../utils/videoExport'
 
 export default function ProgressBarPreview({ config, topics, onExportGif }) {
   const canvasRef = useRef(null)
@@ -48,35 +47,16 @@ export default function ProgressBarPreview({ config, topics, onExportGif }) {
 
     setIsExporting(true)
     setExportProgress(0)
+    setExportStatus('正在录制...')
 
     try {
-      let blob
-
-      if (config.exportFormat === 'webm') {
-        setExportStatus('正在录制...')
-        blob = await recordWebM()
-      } else {
-        blob = await generateVideoWithFFmpeg(
-          canvasRef.current,
-          config,
-          topics,
-          {
-            exportResolution: config.exportResolution,
-            exportQuality: config.exportQuality
-          },
-          (progress, status) => {
-            setExportProgress(progress)
-            setExportStatus(status)
-          }
-        )
-      }
+      const blob = await recordWebM()
 
       // 下载视频
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      const ext = config.exportFormat === 'webm' ? 'webm' : 'mp4'
-      a.download = `progress-bar-${Date.now()}.${ext}`
+      a.download = `progress-bar-${Date.now()}.webm`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

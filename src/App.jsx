@@ -21,8 +21,6 @@ export default function App() {
     fontSize: 18,
     fontFamily: 'Arial',
     exportResolution: '1920x1080',
-    exportQuality: 'medium',
-    exportFormat: 'mp4',
   })
 
   return (

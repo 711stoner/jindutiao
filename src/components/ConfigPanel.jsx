@@ -194,18 +194,6 @@ export default function ConfigPanel({ config, onChange, topics, onTopicsChange }
         <label>导出设置</label>
 
         <div style={{ marginBottom: '12px' }}>
-          <label style={{ fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block' }}>格式</label>
-          <select
-            value={config.exportFormat}
-            onChange={(e) => handleConfigChange('exportFormat', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-          >
-            <option value="webm">WebM (需要等待视频时长)</option>
-            <option value="mp4">MP4 (快速生成)</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
           <label style={{ fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block' }}>分辨率</label>
           <select
             value={config.exportResolution}
@@ -218,20 +206,11 @@ export default function ConfigPanel({ config, onChange, topics, onTopicsChange }
           </select>
         </div>
 
-        {config.exportFormat === 'mp4' && (
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block' }}>质量</label>
-            <select
-              value={config.exportQuality}
-              onChange={(e) => handleConfigChange('exportQuality', e.target.value)}
-              style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-            >
-              <option value="low">低 (文件小)</option>
-              <option value="medium">中 (推荐)</option>
-              <option value="high">高 (质量优先)</option>
-            </select>
-          </div>
-        )}
+        <div style={{ fontSize: '11px', color: '#999', marginBottom: '12px' }}>
+          💡 导出为 WebM 格式。需要等待视频时长才能完成录制。
+          <br />
+          如需 MP4，可用 <a href="https://cloudconvert.com/webm-to-mp4" target="_blank" rel="noopener noreferrer" style={{ color: '#4ECDC4' }}>在线工具</a> 转换。
+        </div>
 
         <button
           className="export-btn"
