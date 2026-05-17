@@ -1,20 +1,29 @@
 let ffmpeg = null
 
-async function toBlobURL(url, mimeType) {
-  const res = await fetch(url)
-  return URL.createObjectURL(await res.blob())
-}
-
 async function initFFmpeg(onProgress) {
   if (ffmpeg?.isLoaded?.()) return ffmpeg
 
+  // 等待FFmpeg库从CDN加载
+  let retries = 0
+  while (!window.FFmpeg && retries < 100) {
+    await new Promise(r => setTimeout(r, 100))
+    retries++
+  }
+
+  if (!window.FFmpeg) {
+    throw new Error('FFmpeg 库加载失败，请刷新页面重试')
+  }
+
   try {
-    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+    onProgress?.(0.05, '初始化 FFmpeg...')
+
+    const { FFmpeg, toBlobURL } = window.FFmpeg
+
     ffmpeg = new FFmpeg()
 
-    onProgress?.(0.08, '加载 FFmpeg 核心文件...')
-
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+
+    onProgress?.(0.1, '加载 FFmpeg 核心文件...')
 
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
