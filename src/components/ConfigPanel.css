@@ -1,0 +1,61 @@
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.config-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.config-group input[type="number"],
+.config-group input[type="color"] {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.config-group input[type="number"]:focus,
+.config-group input[type="color"]:focus {
+  outline: none;
+  border-color: #00ff00;
+  box-shadow: 0 0 4px rgba(0, 255, 0, 0.3);
+}
+
+.config-group input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.export-btn {
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+}
