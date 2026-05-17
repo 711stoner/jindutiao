@@ -1,10 +1,15 @@
 let ffmpeg = null
 
+async function toBlobURL(url, mimeType) {
+  const res = await fetch(url)
+  return URL.createObjectURL(await res.blob())
+}
+
 async function initFFmpeg(onProgress) {
   if (ffmpeg?.isLoaded?.()) return ffmpeg
 
   try {
-    const { FFmpeg, toBlobURL } = await import('@ffmpeg/ffmpeg')
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
     ffmpeg = new FFmpeg()
 
     onProgress?.(0.08, '加载 FFmpeg 核心文件...')
