@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import JSZip from 'jszip'
 
 export default function ProgressBarPreview({ config, topics, onExportGif }) {
   const canvasRef = useRef(null)
@@ -13,68 +14,72 @@ export default function ProgressBarPreview({ config, topics, onExportGif }) {
       try {
         const fps = 30
         const totalFrames = Math.ceil(config.totalDuration * fps)
-        const frames = []
+        const zip = new JSZip()
+        const framesFolder = zip.folder('frames')
+
+        setExportStatus('生成帧...')
 
         // 生成所有帧
         for (let i = 0; i < totalFrames; i++) {
-          const time = i / fps
-          const canvas = canvasRef.current
+          // 绘制当前时间的帧
+          const currentTime = i / fps
+          setCurrentTime(currentTime)
 
-          // 获取当前帧的canvas图像数据
-          const imageData = canvas.toDataURL('image/png')
-          frames.push({ data: imageData, index: i })
+          // 等待canvas更新
+          await new Promise(r => setTimeout(r, 10))
 
-          // 更新进度
-          setExportProgress(i / totalFrames * 0.9)
+          // 获取canvas数据
+          const canvasData = canvasRef.current.toDataURL('image/png')
+          const base64Data = canvasData.split(',')[1]
 
-          // 让UI有机会更新
-          if (i % 10 === 0) {
-            await new Promise(r => setTimeout(r, 0))
-          }
+          // 添加到ZIP
+          framesFolder.file(`frame_${String(i).padStart(6, '0')}.png`, base64Data, { base64: true })
+
+          setExportProgress((i / totalFrames) * 0.9)
         }
 
-        // 下载帧序列
-        // 由于浏览器限制，分批下载而不是ZIP
-        setExportStatus('下载帧...')
-
-        // 创建一个包含所有帧数据的JSON
-        const frameListJSON = {
+        // 添加info文件
+        const infoJSON = {
           totalFrames,
-          fps,
+          fps: 30,
+          duration: config.totalDuration,
           resolution: config.exportResolution,
-          frames: frames.map(f => f.index)
+          instruction: '在剪辑软件中导入 frames 文件夹作为图片序列'
         }
+        zip.file('README.txt', `
+视频进度条帧序列
+================
 
-        // 下载帧列表
-        const listBlob = new Blob([JSON.stringify(frameListJSON, null, 2)], { type: 'application/json' })
-        const listUrl = URL.createObjectURL(listBlob)
-        const listLink = document.createElement('a')
-        listLink.href = listUrl
-        listLink.download = `progress-bar-frames-info.json`
-        document.body.appendChild(listLink)
-        listLink.click()
-        document.body.removeChild(listLink)
+总帧数: ${totalFrames}
+帧率: 30fps
+时长: ${config.totalDuration}秒
+分辨率: ${config.exportResolution}
 
-        // 逐个下载每一帧
-        for (let i = 0; i < frames.length; i++) {
-          const frame = frames[i]
-          const link = document.createElement('a')
-          link.href = frame.data
-          link.download = `frame_${String(i).padStart(6, '0')}.png`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
+使用方法：
+1. 在 Premiere Pro/Final Cut Pro 中
+2. File → Import → Image Sequence
+3. 选择 frames 文件夹中的第一个PNG文件
+4. 帧率设为 30fps
+5. 导出为 MP4 或其他格式
 
-          setExportProgress(0.9 + (i / frames.length) * 0.1)
+完成！
+        `)
 
-          // 下载之间延迟避免浏览器卡顿
-          if (i % 5 === 0) {
-            await new Promise(r => setTimeout(r, 100))
-          }
-        }
+        setExportStatus('打包中...')
+        const blob = await zip.generateAsync({ type: 'blob' })
 
-        setExportStatus('帧序列已导出！')
+        // 下载ZIP
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `progress-bar-frames-${Date.now()}.zip`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
         setExportProgress(1)
+        setExportStatus('帧序列已导出！')
         resolve()
       } catch (error) {
         reject(error)
